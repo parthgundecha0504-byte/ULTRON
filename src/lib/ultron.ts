@@ -30,6 +30,7 @@ export function shatter(chess: Chess, sq: Square) {
 export function pickUltronMove(chess: Chess): Move | null {
   const moves = chess.moves({ verbose: true }).filter((m) => m.captured !== "k");
   if (!moves.length) return null;
+  const opp = chess.turn() === "w" ? "b" : "w";
   let best: Move | null = null;
   let bestScore = -Infinity;
   for (const m of moves) {
@@ -37,7 +38,7 @@ export function pickUltronMove(chess: Chess): Move | null {
     chess.move(m);
     if (chess.isCheckmate()) s += 1000;
     if (chess.inCheck()) s += 0.6;
-    const defended = chess.isAttacked(m.to, "w");
+    const defended = chess.isAttacked(m.to, opp);
     if (m.captured) {
       s += (VAL[m.captured] ?? 0) * 10;
       if (!defended) s += 25; // hanging piece — devour
