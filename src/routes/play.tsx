@@ -4,7 +4,7 @@ import type { Level } from "@/lib/ultron";
 
 export const Route = createFileRoute("/play")({
   validateSearch: (s: Record<string, unknown>): { level: Level } => {
-    const n = Number(s.level);
+    const n = Number(s["level"]);
     return { level: (n === 2 || n === 3 ? n : 1) as Level };
   },
   head: () => ({
