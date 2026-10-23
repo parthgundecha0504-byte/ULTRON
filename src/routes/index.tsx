@@ -25,8 +25,7 @@ function Home() {
         Human cognitive grit vs. an omniscient machine
       </p>
       <p className="mt-6 max-w-md text-center text-sm text-muted-foreground">
-        Peek at the board, then play blind from memory. Your side — white or black — is assigned at
-        random.
+        Peek at the board, then play blind from memory. Y
       </p>
 
       <div className="mt-10 grid w-full max-w-xl gap-3 sm:grid-cols-3">
