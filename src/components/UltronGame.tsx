@@ -12,6 +12,7 @@ import {
   line,
 } from "@/lib/ultron";
 import { vaultSlam, siren, blip, shatterSfx } from "@/lib/sfx";
+import { ChessPiece } from "@/components/ChessPiece";
 
 type Phase = "peek" | "blind";
 type LogEntry = { id: number; text: string; kind: "mock" | "calc" | "sys" };
@@ -370,19 +371,19 @@ export function UltronGame({ level }: { level: Level }) {
                     )}
                     {cell &&
                       (cell.color === st.human ? (
-                        <span
-                          className={`node-white flex h-[62%] w-[62%] items-center justify-center bg-foreground font-display text-lg font-extrabold text-void transition-all duration-500 sm:text-2xl ${
-                            blindMode ? "rounded-full" : "rounded-sm"
-                          }`}
-                        >
-                          <span className={`transition-opacity duration-500 ${blindMode ? "opacity-0" : "opacity-100"}`}>
-                            {cell.type.toUpperCase()}
-                          </span>
-                        </span>
+                        blindMode ? (
+                          <span className="node-white h-[40%] w-[40%] rounded-full bg-foreground transition-all duration-500" />
+                        ) : (
+                          <ChessPiece
+                            type={cell.type}
+                            className="h-[78%] w-[78%] text-foreground drop-shadow-[0_0_6px_var(--foreground)]"
+                          />
+                        )
                       ) : (
-                        <span className="node-red flex h-[56%] w-[56%] items-center justify-center rounded-full bg-primary font-display text-sm font-bold text-primary-foreground sm:text-lg">
-                          {cell.type.toUpperCase()}
-                        </span>
+                        <ChessPiece
+                          type={cell.type}
+                          className="h-[78%] w-[78%] text-primary drop-shadow-[0_0_8px_var(--primary)]"
+                        />
                       ))}
                     {isTarget && (
                       <span
