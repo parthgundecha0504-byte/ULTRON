@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Chess, type Square } from "chess.js";
 import {
   LEVELS,
@@ -20,6 +21,7 @@ const FILES = "abcdefgh";
 
 interface G {
   chess: Chess;
+  human: "w" | "b";
   level: Level;
   phase: Phase;
   peeksLeft: number;
@@ -36,6 +38,7 @@ interface G {
 function fresh(level: Level): G {
   return {
     chess: new Chess(),
+    human: Math.random() < 0.5 ? "w" : "b",
     level,
     phase: "peek",
     peeksLeft: LEVELS[level].peeks,
@@ -50,8 +53,7 @@ function fresh(level: Level): G {
   };
 }
 
-export function UltronGame() {
-  const [level, setLevel] = useState<Level>(1);
+export function UltronGame({ level }: { level: Level }) {
   const [started, setStarted] = useState(false);
   const g = useRef<G>(fresh(1));
   const [, setTick] = useState(0);
@@ -97,7 +99,7 @@ export function UltronGame() {
     let over: Over;
     if (c.isCheckmate())
       over =
-        c.turn() === "w"
+        c.turn() === st.human
           ? { title: "HUMANITY DEFEATED", detail: "Ultron delivered checkmate." }
           : { title: "MACHINE OVERRIDDEN", detail: "Human cognitive grit prevails." };
     else over = { title: "STALEMATE PROTOCOL", detail: "Neither intelligence could prevail." };
@@ -180,17 +182,23 @@ export function UltronGame() {
     setSelected(null);
     setLog([]);
     say(`Ultron online. Difficulty: ${LEVELS[level].name}.`, "sys");
+    const side = g.current.human === "w" ? "WHITE" : "BLACK";
+    say(`Allegiance randomized: you command ${side}.`, "sys");
     setStarted(true);
     blip(660);
     bump();
+    if (g.current.human === "b") ultronTurn();
   };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { begin(); }, [level]);
 
   const clickSquare = (sq: Square) => {
     const st = g.current;
     const c = st.chess;
-    if (st.over || st.thinking || c.turn() !== "w") return;
+    if (st.over || st.thinking || c.turn() !== st.human) return;
     const piece = c.get(sq);
-    if (piece?.color === "w") {
+    if (piece?.color === st.human) {
       setSelected(sq);
       blip(520);
       return;
@@ -204,7 +212,7 @@ export function UltronGame() {
       if (!legal) return;
       c.move({ from, to: sq, promotion: "q" });
       st.moves++;
-      const hanging = c.isAttacked(sq, "b") && !c.isAttacked(sq, "w");
+      const hanging = c.isAttacked(sq, st.human === "w" ? "b" : "w") && !c.isAttacked(sq, st.human);
       if (hanging) {
         st.visual++;
         say(`Visual array blunder. ${line("mock")}`, "mock");
@@ -248,6 +256,7 @@ export function UltronGame() {
       ? new Set(st.chess.moves({ square: selected, verbose: true }).map((m) => m.to))
       : new Set<string>();
   const board = st.chess.board();
+  const flip = st.human === "b";
 
   return (
     <div className="scanlines min-h-screen bg-void font-mono text-foreground">
@@ -262,37 +271,7 @@ export function UltronGame() {
             Human cognitive grit vs. omniscient machine
           </p>
 
-          {!started ? (
-            <div className="border border-border bg-background p-4">
-              <p className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">
-                Select threat level
-              </p>
-              <div className="flex flex-col gap-2">
-                {([1, 2, 3] as Level[]).map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => setLevel(l)}
-                    className={`border px-3 py-2 text-left text-sm transition ${
-                      level === l
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-muted-foreground"
-                    }`}
-                  >
-                    L{l} · {LEVELS[l].name}
-                    <span className="block text-xs text-muted-foreground">
-                      {LEVELS[l].peeks} peeks → {LEVELS[l].blind} blind moves
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={begin}
-                className="mt-4 w-full bg-primary py-3 font-display text-sm font-bold tracking-widest text-primary-foreground hover:opacity-90"
-              >
-                INITIALIZE
-              </button>
-            </div>
-          ) : (
+          {started && (
             <>
               <div
                 className={`border px-3 py-2 text-sm font-bold tracking-widest ${
@@ -346,12 +325,15 @@ export function UltronGame() {
                   ))}
                 </ul>
               </div>
-              <button
-                onClick={() => setStarted(false)}
-                className="border border-border py-2 text-xs tracking-widest text-muted-foreground hover:text-foreground"
+              <div className="text-xs tracking-widest text-muted-foreground">
+                YOU: {st.human === "w" ? "WHITE" : "BLACK"} · {LEVELS[st.level].name.toUpperCase()}
+              </div>
+              <Link
+                to="/"
+                className="border border-primary py-2 text-center text-xs font-bold tracking-widest text-primary hover:bg-primary/10"
               >
-                ABORT / RECONFIGURE
-              </button>
+                QUIT GAME
+              </Link>
             </>
           )}
         </aside>
@@ -362,8 +344,10 @@ export function UltronGame() {
             key={breach}
             className={`grid aspect-square w-full max-w-[640px] grid-cols-8 grid-rows-8 border border-border ${breach ? "breach" : ""} ${!started ? "opacity-40" : ""}`}
           >
-            {board.map((row, r) =>
-              row.map((cell, f) => {
+            {(flip ? [...board].reverse() : board).map((row, dr) =>
+              (flip ? [...row].reverse() : row).map((cell, df) => {
+                const r = flip ? 7 - dr : dr;
+                const f = flip ? 7 - df : df;
                 const sq = `${FILES[f]}${8 - r}` as Square;
                 const light = (r + f) % 2 === 0;
                 const isSel = selected === sq;
@@ -375,17 +359,17 @@ export function UltronGame() {
                     className={`relative flex items-center justify-center ${light ? "bg-sq-light" : "bg-sq-dark"} ${isSel ? "ring-2 ring-inset ring-primary" : ""}`}
                     aria-label={sq}
                   >
-                    {f === 0 && (
+                    {df === 0 && (
                       <span className="absolute left-1 top-0.5 text-[9px] text-muted-foreground">{8 - r}</span>
                     )}
-                    {r === 7 && (
+                    {dr === 7 && (
                       <span className="absolute bottom-0.5 right-1 text-[9px] text-muted-foreground">{FILES[f]}</span>
                     )}
                     {shattered === sq && (
                       <span className="absolute h-1/2 w-1/2 animate-ping rounded-full bg-primary" />
                     )}
                     {cell &&
-                      (cell.color === "w" ? (
+                      (cell.color === st.human ? (
                         <span
                           className={`node-white flex h-[62%] w-[62%] items-center justify-center bg-foreground font-display text-lg font-extrabold text-void transition-all duration-500 sm:text-2xl ${
                             blindMode ? "rounded-full" : "rounded-sm"
@@ -441,6 +425,9 @@ export function UltronGame() {
             >
               RE-ENGAGE
             </button>
+            <Link to="/" className="mt-3 block text-xs tracking-widest text-muted-foreground hover:text-foreground">
+              RETURN TO HOME
+            </Link>
           </div>
         </div>
       )}
