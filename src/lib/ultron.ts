@@ -39,13 +39,13 @@ export function pickUltronMove(chess: Chess): Move | null {
     if (chess.inCheck()) s += 0.6;
     const defended = chess.isAttacked(m.to, "w");
     if (m.captured) {
-      s += VAL[m.captured] * 10;
+      s += (VAL[m.captured] ?? 0) * 10;
       if (!defended) s += 25; // hanging piece — devour
     }
-    if (defended) s -= VAL[m.piece] * 9;
+    if (defended) s -= (VAL[m.piece] ?? 0) * 9;
     if (m.promotion) s += 80;
     chess.undo();
-    const c = "cdef".includes(m.to[0]) && "3456".includes(m.to[1]);
+    const c = "cdef".includes(m.to[0] ?? "") && "3456".includes(m.to[1] ?? "");
     if (c) s += 0.4;
     if (s > bestScore) {
       bestScore = s;
@@ -79,4 +79,4 @@ export const LINES = {
   ],
 };
 export const line = (k: keyof typeof LINES) =>
-  LINES[k][Math.floor(Math.random() * LINES[k].length)];
+  LINES[k][Math.floor(Math.random() * LINES[k].length)] ?? "";
