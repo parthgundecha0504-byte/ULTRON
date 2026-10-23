@@ -309,12 +309,13 @@ export function UltronGame({ level }: { level: Level }) {
                 <button
                   type="button"
                   onClick={() => setLogOpen((v) => !v)}
-                  className="flex w-full items-center justify-between text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                  disabled={blindMode}
+                  className={`flex w-full items-center justify-between text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground ${blindMode ? "cursor-not-allowed opacity-40 hover:text-muted-foreground" : ""}`}
                 >
                   <span>&gt; systems log</span>
-                  <span className="tracking-widest">{logOpen ? "[hide]" : "[show]"}</span>
+                  <span className="tracking-widest">{blindMode ? "[offline]" : logOpen ? "[hide]" : "[show]"}</span>
                 </button>
-                {logOpen && (
+                {!blindMode && logOpen && (
                   <ul className="mt-2 flex max-h-72 flex-col gap-1 overflow-hidden text-xs">
                     {log.map((e, i) => (
                       <li
