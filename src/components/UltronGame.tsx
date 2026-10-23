@@ -360,7 +360,7 @@ export function UltronGame() {
         <main className="flex flex-1 items-center justify-center">
           <div
             key={breach}
-            className={`grid aspect-square w-full max-w-[640px] grid-cols-8 border border-border ${breach ? "breach" : ""} ${!started ? "opacity-40" : ""}`}
+            className={`grid aspect-square w-full max-w-[640px] grid-cols-8 grid-rows-8 border border-border ${breach ? "breach" : ""} ${!started ? "opacity-40" : ""}`}
           >
             {board.map((row, r) =>
               row.map((cell, f) => {
