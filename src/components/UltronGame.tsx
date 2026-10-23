@@ -65,6 +65,7 @@ export function UltronGame({ level }: { level: Level }) {
   const [breach, setBreach] = useState(0);
   const [shattered, setShattered] = useState<Square | null>(null);
   const [log, setLog] = useState<LogEntry[]>([]);
+  const [logOpen, setLogOpen] = useState(true);
   const logId = useRef(0);
 
   const say = (text: string, kind: LogEntry["kind"]) =>
@@ -305,26 +306,33 @@ export function UltronGame({ level }: { level: Level }) {
               </div>
 
               <div className="flex-1 border border-border bg-background p-3">
-                <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
-                  &gt; systems log
-                </p>
-                <ul className="flex max-h-72 flex-col gap-1 overflow-hidden text-xs">
-                  {log.map((e, i) => (
-                    <li
-                      key={e.id}
-                      className={
-                        e.kind === "mock"
-                          ? "text-primary"
-                          : e.kind === "sys"
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                      }
-                      style={{ opacity: 1 - i * 0.06 }}
-                    >
-                      [ULTRON] {e.text}
-                    </li>
-                  ))}
-                </ul>
+                <button
+                  type="button"
+                  onClick={() => setLogOpen((v) => !v)}
+                  className="flex w-full items-center justify-between text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                >
+                  <span>&gt; systems log</span>
+                  <span className="tracking-widest">{logOpen ? "[hide]" : "[show]"}</span>
+                </button>
+                {logOpen && (
+                  <ul className="mt-2 flex max-h-72 flex-col gap-1 overflow-hidden text-xs">
+                    {log.map((e, i) => (
+                      <li
+                        key={e.id}
+                        className={
+                          e.kind === "mock"
+                            ? "text-primary"
+                            : e.kind === "sys"
+                              ? "text-foreground"
+                              : "text-muted-foreground"
+                        }
+                        style={{ opacity: 1 - i * 0.06 }}
+                      >
+                        [ULTRON] {e.text}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <div className="text-xs tracking-widest text-muted-foreground">
                 YOU: {st.human === "w" ? "WHITE" : "BLACK"} · {LEVELS[st.level].name.toUpperCase()}
